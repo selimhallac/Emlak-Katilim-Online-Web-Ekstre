@@ -58,18 +58,52 @@ XML;
             curl_close($curl);
         
             if ($err) {
-                $res['statu'] = false;
-                $res['response'] = 'cURL error: ' . $err;
+                return ['status' => false, 'response' => 'cURL error: ' . $err];
             } else {
-                $res['statu'] = true;
-                $res['response'] = $response;
+                // XML Yanıtı Parse Et
+                $responseXml = simplexml_load_string($response);
+               
+                $namespaces = $responseXml->getNamespaces(true);
+
+                // GetAccountStatementResponse düğümüne erişim
+                $body = $responseXml->children($namespaces['s'])->Body;
+                $responseContent = $body->children($namespaces[''])->GetAccountStatementResponse->GetAccountStatementResult;
+                //print_r($responseContent->children($namespaces['a']));
+                $responseData = [];
+                // Bilgiler Hatalı ise
+                if (@!isset($responseContent->children($namespaces['a'])->Value->children($namespaces['b'])->AccountContract)){
+                    return ['status' => false, 'response' => (String)$responseContent->children($namespaces['a'])->Results->Result->ErrorMessage];
+                }
+                
+                
+                foreach ($responseContent->children($namespaces['a'])->Value->children($namespaces['b'])->AccountContract as $accountContract) {
+                    $accountDetails = [];
+                    $accountDetails['AccountNumber'] = (string)$accountContract->AccountNumber;
+                    $accountDetails['BranchName'] = (string)$accountContract->BranchName;
+                    $accountDetails['Balance'] = (string)$accountContract->Balance;
+                    $accountDetails['Currency'] = (string)$accountContract->FECName;
+                    $accountDetails['Currency_name'] = (string)$accountContract->FECLongName;
+                    $accountDetails['LastTranDate'] = (string)$accountContract->LastTranDate;
+                    $accountDetails['OpenDate'] = (string)$accountContract->OpenDate;
+                    // Transaction Details
+                    foreach ($accountContract->Details->children($namespaces['b'])->TransactionDetailContract as $transactionDetail) {
+                        $transaction = [];
+                        $transaction['Amount'] = (string)$transactionDetail->Amount;
+                        $transaction['Description'] = (string)$transactionDetail->Description;
+                        $transaction['TranDate'] = (string)$transactionDetail->TranDate;
+                        $transaction['BusinessKey'] = (string)$transactionDetail->BusinessKey;
+                        $accountDetails['Transactions'][] = $transaction;
+                        
+                    } 
+
+                    $responseData[] = $accountDetails;
+                }   
+
+                return ['status' => true, 'response' => $responseData];
             }
-            return json_encode($res);
         
         } catch (Throwable $e) {
-            $res['statu'] = false;
-            $res['response'] = 'Bağlantı problemi oluştu.';
-            return json_encode($res);
+            return ['status' => false, 'response' => 'Bağlantı problemi oluştu.'];
         }
     }
 }
