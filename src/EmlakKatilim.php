@@ -92,6 +92,7 @@ XML;
                         $transaction['Description'] = (string)$transactionDetail->Description;
                         $transaction['TranDate'] = (string)$transactionDetail->TranDate;
                         $transaction['BusinessKey'] = (string)$transactionDetail->BusinessKey;
+                        $transaction['CurrentBalance'] = (string)$transactionDetail->CurrentBalance;
                         $accountDetails['Transactions'][] = $transaction;
                         
                     } 
