@@ -85,6 +85,7 @@ XML;
                     $accountDetails['Currency_name'] = (string)$accountContract->FECLongName;
                     $accountDetails['LastTranDate'] = (string)$accountContract->LastTranDate;
                     $accountDetails['OpenDate'] = (string)$accountContract->OpenDate;
+                    $accountDetails['IBAN'] = (string)$accountContract->IBAN;
                     $accountDetails['BranchId'] = (string)$accountContract->BranchId;           // Transaction Details
                     foreach ($accountContract->Details->children($namespaces['b'])->TransactionDetailContract as $transactionDetail) {
                         $transaction = [];
